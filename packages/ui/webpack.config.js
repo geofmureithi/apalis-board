@@ -22,6 +22,7 @@ module.exports = {
     path: path.resolve(__dirname, './dist/static'),
     filename: `[name]${isProd ? '.[contenthash]' : ''}.js`,
     publicPath: `${isProd ? basePath : `http://localhost:${devServerPort}`}/static/`,
+    publicPath: 'auto',
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
@@ -90,12 +91,7 @@ module.exports = {
       filename: '[name].[contenthash].css',
     }),
     new HtmlWebpackPlugin({
-      filename: path.resolve(__dirname, './dist/index.ejs'),
-      template: './src/index.ejs',
-      templateParameters: {
-        basePath,
-      },
-      inject: 'body',
+      template: './src/index.html',
     }),
     new CleanWebpackPlugin({ cleanStaleWebpackAssets: false }),
     new CopyPlugin({
@@ -105,13 +101,14 @@ module.exports = {
     !isProd && new ReactRefreshWebpackPlugin(),
   ].filter(Boolean),
   devServer: {
-    proxy: {
-      '*': 'http://localhost:3000',
-    },
+    // proxy: {
+    //   '*': 'http://localhost:3000',
+    // },
     compress: true,
     hot: true,
     port: devServerPort,
-    open: ['/ui'],
+    open: ['/'],
+
     devMiddleware: {
       writeToDisk: true,
     },

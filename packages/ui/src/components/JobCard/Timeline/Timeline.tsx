@@ -4,9 +4,10 @@ import s from './Timeline.module.css';
 import { AppJob, Status } from '@bull-board/api/typings/app';
 import { STATUSES } from '@bull-board/api/src/constants/statuses';
 
-type TimeStamp = number | Date;
+//type TimeStamp = number | Date;
 
-const formatDate = (ts: TimeStamp) => {
+const formatDate = (date: any) => {
+  const ts = new Date(date);
   if (isToday(ts)) {
     return format(ts, 'HH:mm:ss');
   }
@@ -22,35 +23,37 @@ export const Timeline = function Timeline({ job, status }: { job: AppJob; status
       <ul className={s.timeline}>
         <li>
           <small>Added at</small>
-          <time>{formatDate(job.timestamp || 0)}</time>
+          <time>{formatDate(job.run_at || 0)}</time>
         </li>
-        {!!job.delay && job.delay > 0 && status === STATUSES.delayed && (
+        {!!job.delay && job.delay > 0 && status === STATUSES.Scheduled && (
           <li>
             <small>Will run at</small>
-            <time>{formatDate((job.timestamp || 0) + job.delay)}</time>
+            <time>{formatDate((job.run_at || 0) + job.delay)}</time>
           </li>
         )}
-        {!!job.processedOn && (
+        {!!job.lock_at && (
           <li>
             <small>
               {job.delay && job.delay > 0 ? 'delayed for ' : ''}
-              {formatDistance(job.processedOn, job.timestamp || 0, {
+              {formatDistance(new Date(job.lock_at), new Date(job.run_at || 0), {
                 includeSeconds: true,
               })}
             </small>
             <small>Process started at</small>
-            <time>{formatDate(job.processedOn)}</time>
+            <time>{formatDate(job.lock_at)}</time>
           </li>
         )}
-        {!!job.finishedOn && (
+        {!!job.done_at && (
           <li>
             <small>
-              {formatDistance(job.finishedOn, job.processedOn || 0, {
+              {formatDistance(new Date(job.done_at), new Date(job.lock_at || 0), {
                 includeSeconds: true,
               })}
             </small>
-            <small>{job.isFailed && status !== STATUSES.active ? 'Failed' : 'Finished'} at</small>
-            <time>{formatDate(job.finishedOn)}</time>
+            <small>
+              {job.last_error && status !== STATUSES.Running ? 'Failed' : 'Finished'} at
+            </small>
+            <time>{formatDate(job.done_at)}</time>
           </li>
         )}
       </ul>

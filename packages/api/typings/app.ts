@@ -1,7 +1,7 @@
 import { BaseAdapter } from '../src/queueAdapters/base';
 import { STATUSES } from '../src/constants/statuses';
 
-export type JobCleanStatus = 'completed' | 'wait' | 'active' | 'delayed' | 'failed';
+export type JobCleanStatus = 'Done' | 'Scheduled' | 'Running' | 'Killed' | 'Failed';
 
 export type Status = keyof typeof STATUSES;
 
@@ -37,13 +37,13 @@ export interface QueueJobJson {
   name: string;
   // eslint-disable-next-line @typescript-eslint/ban-types
   progress: number | object;
-  attemptsMade: number;
-  finishedOn?: number | null;
-  processedOn?: number | null;
-  timestamp: number;
-  failedReason: string;
+  attempts: number;
+  done_at?: number | null;
+  lock_at?: number | null;
+  run_at: number;
+  last_error: string;
   stacktrace: string[] | null;
-  data: any;
+  job: any;
   returnvalue: any;
   opts: any;
   parentKey?: string;
@@ -61,22 +61,21 @@ export interface ValidMetrics {
 export interface AppJob {
   id: QueueJobJson['id'];
   name: QueueJobJson['name'];
-  timestamp: QueueJobJson['timestamp'];
-  processedOn?: QueueJobJson['processedOn'];
-  finishedOn?: QueueJobJson['finishedOn'];
+  run_at: QueueJobJson['run_at'];
+  lock_at?: QueueJobJson['lock_at'];
+  done_at?: QueueJobJson['done_at'];
   progress: QueueJobJson['progress'];
-  attempts: QueueJobJson['attemptsMade'];
-  failedReason: QueueJobJson['failedReason'];
-  stacktrace: string[];
+  attempts: QueueJobJson['attempts'];
+  last_error: QueueJobJson['last_error'];
   delay: number | undefined;
   opts: QueueJobJson['opts'];
-  data: QueueJobJson['data'];
+  job: QueueJobJson['job'];
   returnValue: QueueJobJson['returnvalue'];
-  isFailed: boolean;
 }
 
 export interface AppQueue {
   name: string;
+  url?: string;
   counts: Record<Status, number>;
   jobs: AppJob[];
   pagination: Pagination;

@@ -5,7 +5,7 @@ import { QueueActions } from '../QueueActions/QueueActions';
 import { StatusMenu } from '../StatusMenu/StatusMenu';
 import s from './QueuePage.module.css';
 import { AppQueue } from '@bull-board/api/typings/app';
-import { Pagination } from '../Pagination/Pagination';
+// import { Pagination } from '../Pagination/Pagination';
 
 export const QueuePage = ({
   selectedStatus,
@@ -35,7 +35,7 @@ export const QueuePage = ({
               />
             )}
           </div>
-          <Pagination pageCount={queue.pagination.pageCount} />
+          {/* <Pagination pageCount={queue.pagination.pageCount} /> */}
         </div>
       </div>
       {queue.jobs.map((job) => (
@@ -49,8 +49,8 @@ export const QueuePage = ({
             retryJob: actions.retryJob(queue?.name)(job),
             getJobLogs: actions.getJobLogs(queue?.name)(job),
           }}
-          readOnlyMode={queue?.readOnlyMode}
-          allowRetries={queue?.allowRetries}
+          readOnlyMode={queue?.readOnlyMode || false}
+          allowRetries={true}
         />
       ))}
     </section>

@@ -57,27 +57,6 @@ async function setupBullMQProcessor(queueName: string) {
 const run = async () => {
   const app = express();
 
-  const exampleBull = createQueue3('ExampleBull');
-  const exampleBullMq = createQueueMQ('ExampleBullMQ');
-
-  await setupBullProcessor(exampleBull); // needed only for example proposes
-  await setupBullMQProcessor(exampleBullMq.name); // needed only for example proposes
-
-  app.use('/add', (req, res) => {
-    const opts = req.query.opts || ({} as any);
-
-    if (opts.delay) {
-      opts.delay = +opts.delay * 1000; // delay must be a number
-    }
-
-    exampleBull.add({ title: req.query.title }, opts);
-    exampleBullMq.add('Add', { title: req.query.title }, opts);
-
-    res.json({
-      ok: true,
-    });
-  });
-
   const serverAdapter = new ExpressAdapter();
   serverAdapter.setBasePath('/ui');
 

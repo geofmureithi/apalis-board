@@ -30,7 +30,7 @@ export const Progress = ({
         cy="70"
         r="70"
         fill="none"
-        stroke={status === STATUSES.failed ? '#F56565' : '#48BB78'}
+        stroke={status === STATUSES.Failed ? '#F56565' : '#48BB78'}
         strokeWidth="8"
         strokeLinecap="round"
         strokeDasharray="600"

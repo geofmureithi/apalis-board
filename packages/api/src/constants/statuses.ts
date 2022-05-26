@@ -1,9 +1,9 @@
 export const STATUSES = {
-  latest: 'latest',
-  active: 'active',
-  waiting: 'waiting',
-  completed: 'completed',
-  failed: 'failed',
-  delayed: 'delayed',
-  paused: 'paused',
+  Latest: 'Latest',
+  Running: 'Running',
+  Pending: 'Pending',
+  Done: 'Done',
+  Failed: 'Failed',
+  Scheduled: 'Scheduled',
+  Killed: 'Killed',
 } as const;

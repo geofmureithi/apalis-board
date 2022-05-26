@@ -31,10 +31,10 @@ const buttonTypes: Record<string, ButtonType> = {
 };
 
 const statusToButtonsMap: Record<string, ButtonType[]> = {
-  [STATUSES.failed]: [buttonTypes.retry, buttonTypes.clean],
-  [STATUSES.delayed]: [buttonTypes.promote, buttonTypes.clean],
-  [STATUSES.completed]: [buttonTypes.clean],
-  [STATUSES.waiting]: [buttonTypes.clean],
+  [STATUSES.Failed]: [buttonTypes.retry, buttonTypes.clean],
+  [STATUSES.Scheduled]: [buttonTypes.promote, buttonTypes.clean],
+  [STATUSES.Done]: [buttonTypes.clean],
+  [STATUSES.Pending]: [buttonTypes.clean],
 };
 
 export const JobActions = ({ actions, status, allowRetries }: JobActionsProps) => {

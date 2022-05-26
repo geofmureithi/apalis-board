@@ -38,10 +38,10 @@ export const Menu = ({
           <ul className={s.menu}>
             {queues
               .filter(({ name }) => name.includes(searchTerm))
-              .map(({ name: queueName, isPaused }) => (
+              .map(({ name: queueName, url, isPaused }) => (
                 <li key={queueName}>
                   <NavLink
-                    to={`/queue/${encodeURIComponent(queueName)}${
+                    to={`/queue/${url}${
                       !selectedStatuses[queueName] || selectedStatuses[queueName] === STATUS_LIST[0]
                         ? ''
                         : `?status=${selectedStatuses[queueName]}`

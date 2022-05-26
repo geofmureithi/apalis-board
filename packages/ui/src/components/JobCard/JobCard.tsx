@@ -5,7 +5,7 @@ import s from './JobCard.module.css';
 import { Progress } from './Progress/Progress';
 import { Timeline } from './Timeline/Timeline';
 import { AppJob, Status } from '@bull-board/api/typings/app';
-import { STATUSES } from '@bull-board/api/dist/src/constants/statuses';
+import { STATUSES } from '@bull-board/api/src/constants/statuses';
 
 interface JobCardProps {
   job: AppJob;
@@ -20,7 +20,7 @@ interface JobCardProps {
   };
 }
 
-const greenStatuses = [STATUSES.active, STATUSES.completed];
+const greenStatuses = [STATUSES.Done, STATUSES.Running];
 
 export const JobCard = ({ job, status, actions, readOnlyMode, allowRetries }: JobCardProps) => (
   <div className={s.card}>
@@ -50,7 +50,7 @@ export const JobCard = ({ job, status, actions, readOnlyMode, allowRetries }: Jo
           <Progress
             percentage={job.progress}
             status={
-              job.isFailed && !greenStatuses.includes(status as any) ? STATUSES.failed : status
+              job.last_error && !greenStatuses.includes(status as any) ? STATUSES.Failed : status
             }
             className={s.progress}
           />

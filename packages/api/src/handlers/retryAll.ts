@@ -7,7 +7,7 @@ async function retryAll(
   _req: BullBoardRequest,
   queue: BaseAdapter
 ): Promise<ControllerHandlerReturnType> {
-  const jobs = await queue.getJobs([STATUSES.failed]);
+  const jobs = await queue.getJobs([STATUSES.Failed]);
   await Promise.all(jobs.map((job) => job.retry()));
 
   return { status: 200, body: {} };

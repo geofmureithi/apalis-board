@@ -44,33 +44,30 @@ const getStats = async (queue: BaseAdapter): Promise<ValidMetrics> => {
 const formatJob = (job: QueueJob, queue: BaseAdapter): AppJob => {
   const jobProps = job.toJSON();
 
-  const stacktrace = jobProps.stacktrace ? jobProps.stacktrace.filter(Boolean) : [];
-
   return {
     id: jobProps.id,
-    timestamp: jobProps.timestamp,
-    processedOn: jobProps.processedOn,
-    finishedOn: jobProps.finishedOn,
+    run_at: jobProps.run_at,
+    lock_at: jobProps.lock_at,
+    done_at: jobProps.done_at,
     progress: jobProps.progress,
-    attempts: jobProps.attemptsMade,
+    attempts: jobProps.attempts,
     delay: job.opts.delay,
-    failedReason: jobProps.failedReason,
-    stacktrace,
+    last_error: jobProps.last_error,
+
     opts: jobProps.opts,
-    data: queue.format('data', jobProps.data),
+    job: jobProps.job,
     name: queue.format('name', jobProps, jobProps.name),
     returnValue: queue.format('returnValue', jobProps.returnvalue),
-    isFailed: !!jobProps.failedReason || (Array.isArray(stacktrace) && stacktrace.length > 0),
   };
 };
 
 const allStatuses: JobStatus[] = [
-  STATUSES.active,
-  STATUSES.completed,
-  STATUSES.delayed,
-  STATUSES.failed,
-  STATUSES.paused,
-  STATUSES.waiting,
+  STATUSES.Running,
+  STATUSES.Done,
+  STATUSES.Scheduled,
+  STATUSES.Failed,
+  STATUSES.Killed,
+  STATUSES.Pending,
 ];
 const JOB_PER_PAGE = 10;
 

@@ -14,7 +14,7 @@ interface DetailsContentProps {
 
 export const DetailsContent = ({
   selectedTab,
-  job: { stacktrace, data, returnValue, opts, failedReason },
+  job: { job: data, returnValue, opts, last_error: failedReason },
   actions,
 }: DetailsContentProps) => {
   switch (selectedTab) {
@@ -27,11 +27,11 @@ export const DetailsContent = ({
     case 'Error':
       return (
         <>
-          {stacktrace.length === 0 ? (
+          {failedReason.length === 0 ? (
             <div className="error">{!!failedReason ? failedReason : 'NA'}</div>
           ) : (
             <Highlight language="stacktrace" key="stacktrace">
-              {stacktrace.join('\n')}
+              {failedReason}
             </Highlight>
           )}
         </>

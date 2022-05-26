@@ -5,8 +5,8 @@ import { getStaticPath } from '../../utils/getStaticPath';
 export const Header = ({ children }: PropsWithChildren<any>) => (
   <header className={s.header}>
     <div className={s.logo}>
-      <img src={getStaticPath('/images/logo.svg')} alt="Bull Dashboard" />
-      Bull Dashboard
+      <img src={getStaticPath('/images/logo.svg')} alt="Apalis Dashboard" />
+      Apalis Dashboard
     </div>
     {children}
   </header>

@@ -10,7 +10,7 @@ import { Api } from './services/Api';
 
 const basePath = ((window as any).__basePath__ =
   document.head.querySelector('base')?.getAttribute('href') || '');
-const api = new Api({ basePath });
+const api = new Api({ basePath: 'http://127.0.0.1:8000' });
 
 render(
   <BrowserRouter basename={basePath}>

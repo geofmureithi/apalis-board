@@ -13,7 +13,7 @@ export const StatusMenu = ({ queue, actions }: { queue: AppQueue; actions: Store
   return (
     <div className={s.statusMenu}>
       {STATUS_LIST.map((status) => {
-        const isLatest = status === STATUSES.latest;
+        const isLatest = status === STATUSES?.Latest;
         const displayStatus = status.toLocaleUpperCase();
         return (
           <NavLink
