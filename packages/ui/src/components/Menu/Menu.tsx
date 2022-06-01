@@ -38,6 +38,7 @@ export const Menu = ({
           <ul className={s.menu}>
             {queues
               .filter(({ name }) => name.includes(searchTerm))
+              .sort()
               .map(({ name: queueName, url, isPaused }) => (
                 <li key={queueName}>
                   <NavLink

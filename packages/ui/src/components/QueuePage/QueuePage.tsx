@@ -40,7 +40,7 @@ export const QueuePage = ({
       </div>
       {queue.jobs.map((job) => (
         <JobCard
-          key={job.id}
+          key={job.context.id}
           job={job}
           status={selectedStatus[queue.name]}
           actions={{

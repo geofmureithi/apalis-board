@@ -32,16 +32,17 @@ export interface QueueJob {
 }
 
 export interface QueueJobJson {
-  // add properties as needed from real Bull/BullMQ jobs
-  id?: string | undefined | number | null;
-  name: string;
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  progress: number | object;
-  attempts: number;
-  done_at?: number | null;
-  lock_at?: number | null;
-  run_at: number;
-  last_error: string;
+  context: {
+    id?: string | undefined | number | null;
+    name: string;
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    progress: number | object;
+    attempts: number;
+    done_at?: number | null;
+    lock_at?: number | null;
+    run_at: number;
+    last_error: string;
+  };
   stacktrace: string[] | null;
   job: any;
   returnvalue: any;
@@ -59,14 +60,16 @@ export interface ValidMetrics {
 }
 
 export interface AppJob {
-  id: QueueJobJson['id'];
-  name: QueueJobJson['name'];
-  run_at: QueueJobJson['run_at'];
-  lock_at?: QueueJobJson['lock_at'];
-  done_at?: QueueJobJson['done_at'];
-  progress: QueueJobJson['progress'];
-  attempts: QueueJobJson['attempts'];
-  last_error: QueueJobJson['last_error'];
+  context: {
+    id: QueueJobJson['context']['id'];
+    name: QueueJobJson['context']['name'];
+    run_at: QueueJobJson['context']['run_at'];
+    lock_at?: QueueJobJson['context']['lock_at'];
+    done_at?: QueueJobJson['context']['done_at'];
+    progress: QueueJobJson['context']['progress'];
+    attempts: QueueJobJson['context']['attempts'];
+    last_error: QueueJobJson['context']['last_error'];
+  };
   delay: number | undefined;
   opts: QueueJobJson['opts'];
   job: QueueJobJson['job'];

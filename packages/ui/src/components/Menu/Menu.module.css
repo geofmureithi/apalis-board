@@ -7,9 +7,9 @@
   width: var(--menu-width);
   background: linear-gradient(
     to bottom,
-    hsl(217, 22%, 20%),
-    hsl(217, 22%, 16%) 80%,
-    hsl(217, 22%, 12%)
+    #14213D,
+    #000000 80%,
+    #000000
   );
   padding-top: 1rem;
   color: #d5d9dc;

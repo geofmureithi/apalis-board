@@ -25,14 +25,14 @@ const greenStatuses = [STATUSES.Done, STATUSES.Running];
 export const JobCard = ({ job, status, actions, readOnlyMode, allowRetries }: JobCardProps) => (
   <div className={s.card}>
     <div className={s.sideInfo}>
-      <span title={`#${job.id}`}>#{job.id}</span>
+      <span title={`#${job.context.id}`}>#{job.context.id}</span>
       <Timeline job={job} status={status} />
     </div>
     <div className={s.contentWrapper}>
       <div className={s.title}>
         <h4>
-          {job.name}
-          {job.attempts > 1 && <span>attempt #{job.attempts}</span>}
+          {job.context.name}
+          {job.context.attempts > 1 && <span>attempt #{job.context.attempts}</span>}
           {!!job.opts?.repeat?.count && (
             <span>
               repeat {job.opts?.repeat?.count}
@@ -46,11 +46,13 @@ export const JobCard = ({ job, status, actions, readOnlyMode, allowRetries }: Jo
       </div>
       <div className={s.content}>
         <Details status={status} job={job} actions={actions} />
-        {typeof job.progress === 'number' && (
+        {typeof job.context.progress === 'number' && (
           <Progress
-            percentage={job.progress}
+            percentage={job.context.progress}
             status={
-              job.last_error && !greenStatuses.includes(status as any) ? STATUSES.Failed : status
+              job.context.last_error && !greenStatuses.includes(status as any)
+                ? STATUSES.Failed
+                : status
             }
             className={s.progress}
           />

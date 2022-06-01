@@ -68,19 +68,19 @@ export const useStore = (api: Api): Store => {
 
   const promoteJob = (queueName: string) => (job: AppJob) =>
     withConfirmAndUpdate(
-      () => api.promoteJob(queueName, job.id),
+      () => api.promoteJob(queueName, job.context.id),
       'Are you sure that you want to promote this job?'
     );
 
   const retryJob = (queueName: string) => (job: AppJob) =>
     withConfirmAndUpdate(
-      () => api.retryJob(queueName, job.id),
+      () => api.retryJob(queueName, job.context.id),
       'Are you sure that you want to retry this job?'
     );
 
   const cleanJob = (queueName: string) => (job: AppJob) =>
     withConfirmAndUpdate(
-      () => api.cleanJob(queueName, job.id),
+      () => api.cleanJob(queueName, job.context.id),
       'Are you sure that you want to clean this job?'
     );
 
@@ -121,7 +121,7 @@ export const useStore = (api: Api): Store => {
     );
 
   const getJobLogs = (queueName: string) => (job: AppJob) => () =>
-    api.getJobLogs(queueName, job.id);
+    api.getJobLogs(queueName, job.context.id);
 
   return {
     state,

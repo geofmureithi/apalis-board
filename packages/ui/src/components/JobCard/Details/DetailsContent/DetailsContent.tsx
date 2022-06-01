@@ -14,7 +14,12 @@ interface DetailsContentProps {
 
 export const DetailsContent = ({
   selectedTab,
-  job: { job: data, returnValue, opts, last_error: failedReason },
+  job: {
+    job: data,
+    returnValue,
+    opts,
+    context: { last_error: failedReason },
+  },
   actions,
 }: DetailsContentProps) => {
   switch (selectedTab) {

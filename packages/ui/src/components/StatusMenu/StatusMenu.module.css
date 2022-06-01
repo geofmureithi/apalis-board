@@ -34,7 +34,7 @@
 }
 
 .statusMenu > a.active {
-    border-color: #1b1c1d;
+    border-color: #14213D;
     color: rgba(0, 0, 0, 0.95);
     font-weight: 500;
 }

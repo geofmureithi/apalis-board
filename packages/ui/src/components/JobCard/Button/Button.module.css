@@ -36,7 +36,7 @@
 
 .button.default:active,
 .button.default.isActive {
-  background-color: #cbd5e0;
+  background-color: #b5b5b5;
 }
 
 .button.default:hover > svg,

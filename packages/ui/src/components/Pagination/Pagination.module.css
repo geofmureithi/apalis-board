@@ -30,7 +30,7 @@
 
 .pagination a:active,
 .pagination li.isActive a {
-    background-color: #cbd5e0;
+    background-color: #b5b5b5;
 }
 
 .pagination a svg {
