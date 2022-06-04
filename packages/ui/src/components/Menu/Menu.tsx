@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { AppQueue } from '@bull-board/api/typings/app';
+import { AppQueue } from '../../../typings/app';
 import { NavLink } from 'react-router-dom';
 import { STATUS_LIST } from '../../constants/status-list';
 import { SearchIcon } from '../Icons/Search';
@@ -16,11 +16,12 @@ export const Menu = ({
   selectedStatuses: Store['selectedStatuses'];
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const qmenus = React.useMemo(() => queues, [queues?.length]);
   return (
     <aside className={s.aside}>
       <div className={s.secondary}>QUEUES</div>
 
-      {(queues?.length || 0) > 5 && (
+      {(queues?.length || 0) > 1 && (
         <div className={s.searchWrapper}>
           <SearchIcon />
           <input
@@ -34,28 +35,25 @@ export const Menu = ({
         </div>
       )}
       <nav>
-        {!!queues && (
-          <ul className={s.menu}>
-            {queues
-              .filter(({ name }) => name.includes(searchTerm))
-              .sort()
-              .map(({ name: queueName, url, isPaused }) => (
-                <li key={queueName}>
-                  <NavLink
-                    to={`/queue/${url}${
-                      !selectedStatuses[queueName] || selectedStatuses[queueName] === STATUS_LIST[0]
-                        ? ''
-                        : `?status=${selectedStatuses[queueName]}`
-                    }`}
-                    activeClassName={s.active}
-                    title={queueName}
-                  >
-                    {queueName} {isPaused && <span className={s.isPaused}>[ Paused ]</span>}
-                  </NavLink>
-                </li>
-              ))}
-          </ul>
-        )}
+        <ul className={s.menu}>
+          {(qmenus || [])
+            .filter(({ name }) => name.includes(searchTerm))
+            .map(({ name: queueName, isPaused }) => (
+              <li key={queueName}>
+                <NavLink
+                  to={`/queue/${queueName}${
+                    !selectedStatuses[queueName] || selectedStatuses[queueName] === STATUS_LIST[0]
+                      ? ''
+                      : `?status=${selectedStatuses[queueName]}`
+                  }`}
+                  activeClassName={s.active}
+                  title={queueName}
+                >
+                  {queueName} {isPaused && <span className={s.isPaused}>[ Paused ]</span>}
+                </NavLink>
+              </li>
+            ))}
+        </ul>
       </nav>
       <div className={cn(s.appVersion, s.secondary)}>{process.env.APP_VERSION}</div>
     </aside>

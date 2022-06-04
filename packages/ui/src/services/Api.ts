@@ -1,7 +1,8 @@
-import { AppJob, Status } from '@bull-board/api/typings/app';
-import { GetQueuesResponse } from '@bull-board/api/typings/responses';
+import { AppJob, Status } from '../../typings/app';
+import { GetQueuesResponse } from '../../typings/responses';
 import Axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
+import { ApalisWorker } from '../../typings/app';
 
 export class Api {
   private axios: AxiosInstance;
@@ -11,16 +12,19 @@ export class Api {
     this.axios.interceptors.response.use(this.handleResponse, this.handleError);
   }
 
-  public getQueues({
-    activeQueue,
-    status,
-    page,
-  }: {
-    activeQueue?: string;
-    status?: Status;
-    page: string;
-  }): Promise<GetQueuesResponse> {
-    return this.axios.get(`/queues`, { params: { activeQueue, status, page } });
+  public getQueues(): Promise<GetQueuesResponse> {
+    return this.axios.get(`/queues`);
+  }
+
+  public getQueueWorkers(queueName: string): Promise<ApalisWorker[]> {
+    return this.axios.get(`/queues/${encodeURIComponent(queueName)}/workers`);
+  }
+
+  public getJobsByQueue(
+    queueName: string,
+    { page, status }: { page: string; status: Status }
+  ): Promise<{ jobs: AppJob[]; counts: any }> {
+    return this.axios.get(`/queues/${encodeURIComponent(queueName)}`, { params: { page, status } });
   }
 
   public retryAll(queueName: string): Promise<void> {

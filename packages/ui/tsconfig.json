@@ -13,7 +13,10 @@
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "resolveJsonModule": true,
-    "declaration": true
+    "declaration": true,
+    "paths": {
+      "Typings": ["typings"]
+    }
   },
-  "include": ["./src", "./typings/*.d.ts"]
+  "include": ["./src", "./typings/*"]
 }

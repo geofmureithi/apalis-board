@@ -1,5 +1,4 @@
 export const STATUSES = {
-  Latest: 'Latest',
   Running: 'Running',
   Pending: 'Pending',
   Done: 'Done',

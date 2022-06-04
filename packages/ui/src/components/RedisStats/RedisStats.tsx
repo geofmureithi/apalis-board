@@ -1,7 +1,7 @@
 import formatBytes from 'pretty-bytes';
 import React from 'react';
 import s from './RedisStats.module.css';
-import { ValidMetrics } from '@bull-board/api/typings/app';
+import { ValidMetrics } from '../../../typings/app';
 
 const RedisLogo = () => (
   <svg width={42} role="img" viewBox="0 0 24 24">

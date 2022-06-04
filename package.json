@@ -1,26 +1,27 @@
 {
-  "name": "@bull-board/root",
-  "version": "3.11.0",
+  "name": "@apalis-board/root",
+  "version": "0.3.0",
   "private": true,
-  "description": "Bull queue UI for inspecting jobs",
+  "description": "Apalis queue UI for inspecting jobs",
   "keywords": [
-    "bull",
-    "bullmq",
+    "apalis",
+    "rust",
     "redis",
     "queue",
     "monitoring",
     "dashboard"
   ],
   "bugs": {
-    "url": "https://github.com/felixmosh/bull-board/issues"
+    "url": "https://github.com/geofmureithi/apalis-board/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/felixmosh/bull-board.git"
+    "url": "git+https://github.com/geofmureithi/apalis-board.git"
   },
   "license": "MIT",
-  "author": "felixmosh",
+  "author": "geofmureithi",
   "contributors": [
+    "geofmureithi",
     "Erik Engervall <erik.engervall@gmail.com>",
     "felixmosh"
   ],
@@ -30,13 +31,9 @@
   "scripts": {
     "prepublishOnly": "yarn build",
     "lint": "eslint \"./packages/**/*.ts*\"",
-    "build": "lerna run build",
-    "start:dev:docker": "docker-compose up -d",
-    "start:dev:ui": "lerna run --scope @bull-board/ui start",
-    "start:dev:server": "ts-node-dev --rs example.ts",
-    "start:dev": "concurrently \"yarn start:dev:ui\" \"yarn start:dev:server\"",
-    "test": "lerna run test",
-    "clean": "lerna run clean",
+    "build": "yarn workspace @apalis-board/ui build",
+    "start:dev": "yarn workspace @apalis-board/ui start",
+    "serve": "yarn workspace @apalis-board/ui serve",
     "release": "release-it --only-version"
   },
   "devDependencies": {
@@ -48,25 +45,18 @@
     "@babel/preset-react": "^7.12.13",
     "@babel/preset-typescript": "^7.13.0",
     "@babel/runtime": "^7.17.9",
-    "@types/bull": "^3.15.8",
-    "@types/ioredis": "^4.28.10",
     "@types/jest": "^27.4.1",
     "@types/node": "^17.0.25",
-    "@types/redis-info": "^3.0.0",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^4.25.0",
     "@typescript-eslint/parser": "^4.25.0",
     "auto-changelog": "^2.4.0",
     "babel-loader": "^8.2.5",
-    "bull": "^4.8.2",
-    "bullmq": "^1.80.6",
-    "concurrently": "^7.1.0",
     "eslint": "^7.27.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-no-only-tests": "^2.6.0",
     "eslint-plugin-react": "^7.29.4",
     "jest": "^27.5.1",
-    "lerna": "^4.0.0",
     "prettier": "^2.6.2",
     "release-it": "^14.14.2",
     "release-it-yarn-workspaces": "^2.0.1",

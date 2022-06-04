@@ -4,8 +4,8 @@ import { RetryIcon } from '../Icons/Retry';
 import { TrashIcon } from '../Icons/Trash';
 import { Button } from '../JobCard/Button/Button';
 import s from './QueueActions.module.css';
-import { AppQueue, Status } from '@bull-board/api/typings/app';
-import { STATUSES } from '@bull-board/api/src/constants/statuses';
+import { AppQueue, Status } from '../../../typings/app';
+import { STATUSES } from '../../constants/statuses';
 
 interface QueueActionProps {
   queue: AppQueue;

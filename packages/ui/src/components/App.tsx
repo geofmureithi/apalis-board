@@ -29,13 +29,14 @@ export const App = ({ api }: { api: Api }) => {
                   path="/queue/:name"
                   render={({ match: { params } }) => {
                     const currentQueueName = decodeURIComponent(params.name);
-                    const queue = state.data?.queues?.find((q) => q.url === currentQueueName);
+                    const queue = state.data?.queues?.find((q) => q.name === currentQueueName);
 
                     return (
                       <QueuePage
                         queue={queue}
                         actions={actions}
                         selectedStatus={selectedStatuses}
+                        api={api}
                       />
                     );
                   }}
@@ -45,9 +46,7 @@ export const App = ({ api }: { api: Api }) => {
                   {!!state.data &&
                     Array.isArray(state.data?.queues) &&
                     state.data.queues.length > 0 && (
-                      <Redirect
-                        to={`/queue/${encodeURIComponent(state.data?.queues[0].url || '')}`}
-                      />
+                      <Redirect to={`/queue/${state.data?.queues[0].name}`} />
                     )}
                 </Route>
               </Switch>

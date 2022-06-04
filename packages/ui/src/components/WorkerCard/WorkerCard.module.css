@@ -1,0 +1,79 @@
+.tile {
+    background-color: #fff;
+    box-shadow: 0 1px 1px 0 rgba(60, 75, 100, 0.14), 0 2px 1px -1px rgba(60, 75, 100, 0.12),
+    0 1px 3px 0 rgba(60, 75, 100, 0.2);
+    border-radius: 0.25rem;
+    padding: 1em;
+    display: flex;
+    min-height: 24px;
+    max-height: 370px;
+}
+
+.tile + .tile {
+    margin-top: 1rem;
+}
+
+.tile + .card {
+    margin-top: 5rem;
+}
+
+.tileWrapper {
+    display: flex;
+    align-items: center;
+    color: #454b52;
+    font-weight: 300;
+}
+
+.tileWrapper svg {
+    margin: 0.2em;
+    height: 32px;
+    width: 32px;
+    stroke: #14213D;
+}
+
+.tileWrapper h4 {
+    margin-right: 10px;
+    margin-left: 10px;
+    font-weight: 100;
+}
+
+.lastSeen {
+    background: red;
+    margin-right: 10px;
+    margin-left: 10px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+}
+
+.lastSeenActive {
+    background: #2e7d32;
+}
+
+.lastSeenRunning {
+    transform: scale(1);
+	animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+	0% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+	}
+
+	70% {
+		transform: scale(1);
+		box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+	}
+
+	100% {
+		transform: scale(0.95);
+		box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+	}
+}
+
+.lastSeenTime {
+    font-size: smaller;
+}
+
+

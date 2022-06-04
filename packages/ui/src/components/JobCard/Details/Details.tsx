@@ -3,7 +3,7 @@ import { useDetailsTabs } from '../../../hooks/useDetailsTabs';
 import { Button } from '../Button/Button';
 import s from './Details.module.css';
 import { DetailsContent } from './DetailsContent/DetailsContent';
-import { AppJob, Status } from '@bull-board/api/typings/app';
+import { AppJob, Status } from '../../../../typings/app';
 
 interface DetailsProps {
   job: AppJob;
@@ -12,7 +12,7 @@ interface DetailsProps {
 }
 
 export const Details = ({ status, job, actions }: DetailsProps) => {
-  const { tabs, selectedTab } = useDetailsTabs(status, !!job.context.last_error);
+  const { tabs, selectedTab } = useDetailsTabs(status, !!job.context?.last_error);
 
   if (tabs.length === 0) {
     return null;

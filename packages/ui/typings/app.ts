@@ -1,5 +1,19 @@
-import { BaseAdapter } from '../src/queueAdapters/base';
 import { STATUSES } from '../src/constants/statuses';
+
+export type SelectedStatuses = Record<AppQueue['name'], Status>;
+
+export interface QueueActions {
+  promoteJob: (queueName: string) => (job: AppJob) => () => Promise<void>;
+  retryJob: (queueName: string) => (job: AppJob) => () => Promise<void>;
+  cleanJob: (queueName: string) => (job: AppJob) => () => Promise<void>;
+  getJobLogs: (queueName: string) => (job: AppJob) => () => Promise<string[]>;
+  retryAll: (queueName: string) => () => Promise<void>;
+  cleanAllDelayed: (queueName: string) => () => Promise<void>;
+  cleanAllFailed: (queueName: string) => () => Promise<void>;
+  cleanAllCompleted: (queueName: string) => () => Promise<void>;
+  pauseQueue: (queueName: string) => () => Promise<void>;
+  resumeQueue: (queueName: string) => () => Promise<void>;
+}
 
 export type JobCleanStatus = 'Done' | 'Scheduled' | 'Running' | 'Killed' | 'Failed';
 
@@ -14,8 +28,6 @@ export interface QueueAdapterOptions {
   allowRetries: boolean;
   prefix: string;
 }
-
-export type BullBoardQueues = Map<string, BaseAdapter>;
 
 export interface QueueJob {
   opts: {
@@ -42,6 +54,7 @@ export interface QueueJobJson {
     lock_at?: number | null;
     run_at: number;
     last_error: string;
+    lock_by?: string | null;
   };
   stacktrace: string[] | null;
   job: any;
@@ -69,6 +82,7 @@ export interface AppJob {
     progress: QueueJobJson['context']['progress'];
     attempts: QueueJobJson['context']['attempts'];
     last_error: QueueJobJson['context']['last_error'];
+    lock_by: QueueJobJson['context']['lock_by'];
   };
   delay: number | undefined;
   opts: QueueJobJson['opts'];
@@ -78,10 +92,6 @@ export interface AppJob {
 
 export interface AppQueue {
   name: string;
-  url?: string;
-  counts: Record<Status, number>;
-  jobs: AppJob[];
-  pagination: Pagination;
   readOnlyMode: boolean;
   allowRetries: boolean;
   isPaused: boolean;
@@ -90,62 +100,18 @@ export interface AppQueue {
 export type HTTPMethod = 'get' | 'post' | 'put';
 export type HTTPStatus = 200 | 204 | 404 | 405 | 500;
 
-export interface BullBoardRequest {
-  queues: BullBoardQueues;
-  query: Record<string, any>;
-  params: Record<string, any>;
-}
-
-export type ControllerHandlerReturnType = {
-  status?: HTTPStatus;
-  body: string | Record<string, any>;
-};
-
-export type ViewHandlerReturnType = {
-  name: string;
-};
-
 export type Promisify<T> = T | Promise<T>;
-
-export interface AppControllerRoute {
-  method: HTTPMethod | HTTPMethod[];
-  route: string | string[];
-
-  handler(request?: BullBoardRequest): Promisify<ControllerHandlerReturnType>;
-}
-
-export interface AppViewRoute {
-  method: HTTPMethod;
-  route: string | string[];
-
-  handler(request?: BullBoardRequest): ViewHandlerReturnType;
-}
-
-export type AppRouteDefs = {
-  entryPoint: AppViewRoute;
-  api: AppControllerRoute[];
-};
-
-export interface IServerAdapter {
-  setQueues(bullBoardQueues: BullBoardQueues): IServerAdapter;
-
-  setViewsPath(viewPath: string): IServerAdapter;
-
-  setStaticPath(staticsRoute: string, staticsPath: string): IServerAdapter;
-
-  setEntryRoute(route: AppViewRoute): IServerAdapter;
-
-  setErrorHandler(handler: (error: Error) => ControllerHandlerReturnType): IServerAdapter;
-
-  setApiRoutes(routes: AppControllerRoute[]): IServerAdapter;
-}
 
 export interface Pagination {
   pageCount: number;
-  range: {
-    start: number;
-    end: number;
-  };
+}
+
+export interface ApalisWorker {
+  worker_id: string;
+  job_type: string;
+  source: string;
+  layers: string;
+  last_seen: string;
 }
 
 export type FormatterField = 'data' | 'returnValue' | 'name';

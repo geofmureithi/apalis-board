@@ -2,7 +2,7 @@ import React from 'react';
 import { TabsType } from '../../../../hooks/useDetailsTabs';
 import { Highlight } from '../../../Highlight/Highlight';
 import { JobLogs } from './JobLogs/JobLogs';
-import { AppJob } from '@bull-board/api/typings/app';
+import { AppJob } from '../../../../../typings/app';
 
 interface DetailsContentProps {
   job: AppJob;

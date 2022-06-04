@@ -1,16 +1,16 @@
-import { AppJob } from '@bull-board/api/typings/app';
-import { GetQueuesResponse } from '@bull-board/api/typings/responses';
+import { AppJob } from '../../typings/app';
+import { GetQueuesResponse } from '../../typings/responses';
 import { useState } from 'react';
 import { QueueActions, SelectedStatuses } from '../../typings/app';
 
 import { Api } from '../services/Api';
-import { useActiveQueue } from './useActiveQueue';
+//import { useActiveQueue } from './useActiveQueue';
 import { ConfirmApi, useConfirm } from './useConfirm';
 import { useInterval } from './useInterval';
-import { useQuery } from './useQuery';
+
 import { useSelectedStatuses } from './useSelectedStatuses';
 
-const interval = 5000;
+const interval = 20000;
 
 type State = {
   data: null | GetQueuesResponse;
@@ -25,9 +25,6 @@ export interface Store {
 }
 
 export const useStore = (api: Api): Store => {
-  const query = useQuery();
-  const activeQueue = useActiveQueue();
-
   const [state, setState] = useState<State>({
     data: null,
     loading: true,
@@ -38,11 +35,7 @@ export const useStore = (api: Api): Store => {
 
   const update = () =>
     api
-      .getQueues({
-        activeQueue,
-        status: activeQueue ? selectedStatuses[activeQueue] : undefined,
-        page: query.get('page') || '1',
-      })
+      .getQueues()
       .then((data) => {
         setState({ data, loading: false });
       })

@@ -4,8 +4,8 @@ import { JobActions } from './JobActions/JobActions';
 import s from './JobCard.module.css';
 import { Progress } from './Progress/Progress';
 import { Timeline } from './Timeline/Timeline';
-import { AppJob, Status } from '@bull-board/api/typings/app';
-import { STATUSES } from '@bull-board/api/src/constants/statuses';
+import { AppJob, Status } from '../../../typings/app';
+import { STATUSES } from '../../constants/statuses';
 
 interface JobCardProps {
   job: AppJob;
