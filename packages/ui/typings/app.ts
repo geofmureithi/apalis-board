@@ -106,8 +106,12 @@ export interface Pagination {
   pageCount: number;
 }
 
+export interface WorkerId {
+  name: string;
+}
+
 export interface ApalisWorker {
-  worker_id: string;
+  worker_id: WorkerId;
   job_type: string;
   source: string;
   layers: string;
