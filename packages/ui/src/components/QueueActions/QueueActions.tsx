@@ -14,7 +14,7 @@ interface QueueActionProps {
   allowRetries: boolean;
 }
 
-const ACTIONABLE_STATUSES = [STATUSES.Failed, STATUSES.Scheduled, STATUSES.Done] as const;
+const ACTIONABLE_STATUSES = [STATUSES.Retry, STATUSES.Failed, STATUSES.Done] as const;
 
 const isStatusActionable = (status: Status): boolean => ACTIONABLE_STATUSES.includes(status as any);
 
@@ -47,7 +47,7 @@ export const QueueActions = ({ status, actions, queue, allowRetries }: QueueActi
           </li>
         </>
       )}
-      {status === STATUSES.Scheduled && (
+      {status === STATUSES.Retry && (
         <li>
           <CleanAllButton onClick={actions.cleanAllDelayed(queue.name)} />
         </li>

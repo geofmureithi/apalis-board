@@ -15,7 +15,6 @@ export interface QueueActions {
   resumeQueue: (queueName: string) => () => Promise<void>;
 }
 
-export type JobCleanStatus = 'Done' | 'Scheduled' | 'Running' | 'Killed' | 'Failed';
 
 export type Status = keyof typeof STATUSES;
 

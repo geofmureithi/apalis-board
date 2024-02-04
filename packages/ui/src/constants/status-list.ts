@@ -5,7 +5,7 @@ export const STATUS_LIST: Readonly<KeyOf<typeof STATUSES>> = [
   STATUSES.Running,
   STATUSES.Pending,
   STATUSES.Done,
+  STATUSES.Retry,
   STATUSES.Failed,
-  STATUSES.Scheduled,
   STATUSES.Killed,
 ] as const;
