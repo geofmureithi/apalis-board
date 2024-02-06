@@ -31,8 +31,8 @@ const buttonTypes: Record<string, ButtonType> = {
 };
 
 const statusToButtonsMap: Record<string, ButtonType[]> = {
+  [STATUSES.Retry]: [buttonTypes.promote, buttonTypes.clean],
   [STATUSES.Failed]: [buttonTypes.retry, buttonTypes.clean],
-  [STATUSES.Scheduled]: [buttonTypes.promote, buttonTypes.clean],
   [STATUSES.Done]: [buttonTypes.clean],
   [STATUSES.Pending]: [buttonTypes.clean],
 };

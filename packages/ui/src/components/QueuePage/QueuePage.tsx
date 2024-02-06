@@ -97,9 +97,10 @@ export const QueuePage = ({
       {isDetailsTab &&
         workers.data?.map((w) => (
           <WorkerCard
-            key={w.worker_id}
+            key={w.worker_id.name}
             {...w}
-            jobs={jobRes.data?.jobs?.filter((j) => j.context.lock_by == w.worker_id)}
+            worker_id={w.worker_id.name}
+            jobs={jobRes.data?.jobs?.filter((j) => j.context.lock_by == w.worker_id.name)}
           />
         ))}
       {!isDetailsTab &&

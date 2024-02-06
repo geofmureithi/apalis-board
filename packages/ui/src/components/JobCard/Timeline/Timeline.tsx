@@ -25,7 +25,7 @@ export const Timeline = function Timeline({ job, status }: { job: AppJob; status
           <small>Added at</small>
           <time>{formatDate(job.context.run_at || 0)}</time>
         </li>
-        {!!job.delay && job.delay > 0 && status === STATUSES.Scheduled && (
+        {!!job.delay && job.delay > 0 && status === STATUSES.Retry && (
           <li>
             <small>Will run at</small>
             <time>{formatDate((job.context.run_at || 0) + job.delay)}</time>
