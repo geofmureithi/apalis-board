@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/backend", "crates/frontend", "crates/shared", "examples/rest-api", "examples/uptime-bird"]
+resolver = "2"

@@ -1,9 +1,0 @@
-{
-    "public": "dist/static",
-    "rewrites": [
-        {
-            "source": "*",
-            "destination": "/index.html"
-        }
-    ]
-}

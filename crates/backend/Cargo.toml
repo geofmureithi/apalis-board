@@ -1,0 +1,16 @@
+[package]
+name = "apalis-board-backend"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "4.5.1"
+actix-web-actors = "4.3.0"
+actix = "0.13.3"
+uuid = { version = "1.8", features = ["v4", "serde"] }
+shared = { package = "apalis-board-shared", path = "../shared" }
+apalis-core = { version = "0.5", git = "https://github.com/geofmureithi/apalis", branch = "fix/better-api" }
+serde = { version = "1", features = ["derive"] }
+futures = "0.3"
