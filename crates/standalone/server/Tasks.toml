@@ -1,6 +1,0 @@
-[default.backends]
-sqlite = { uri = "sqlite://data.db", tasks = ["sqlite::Notification"] }
-redis = { uri = "redis://127.0.0.1/", tasks = [
-    "apalis::Email",
-    "apalis::Notification",
-] }

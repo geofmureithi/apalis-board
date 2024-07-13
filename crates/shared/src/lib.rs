@@ -1,22 +1,31 @@
-use std::{any::type_name, future::Future, path::PathBuf, time::Duration};
+use std::{any::type_name, future::Future, time::Duration};
 
-// #[cfg(feature = "redis")]
+#[cfg(feature = "redis")]
 pub mod redis;
 
-use apalis_core::{error::Error, request::Request, worker::WorkerId};
+#[cfg(feature = "sqlite")]
+pub mod sqlite;
+
+#[cfg(feature = "postgres")]
+pub mod postgres;
+
+#[cfg(feature = "mysql")]
+pub mod mysql;
+
+use apalis_core::{error::Error, worker::WorkerId};
 use serde::{Deserialize, Serialize};
 
 /// A serializable version of a worker.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Worker {
     /// The Worker's Id
-    worker_id: WorkerId,
+    pub worker_id: WorkerId,
     /// Type of task being consumed by the worker, useful for display and filtering
-    r#type: String,
+    pub r#type: String,
     /// The type of job stream
-    source: String,
+    pub source: String,
     /// The layers that were loaded for worker.
-    layers: Vec<Layer>,
+    pub layers: Vec<Layer>,
     // / The last time the worker was seen. Some sources use keep alive.
     // last_seen: Timestamp,
 }
@@ -33,27 +42,43 @@ impl Worker {
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct Stat {
-    pending: usize,
-    running: usize,
-    dead: usize,
-    failed: usize,
-    success: usize,
+    pub pending: usize,
+    pub running: usize,
+    pub dead: usize,
+    pub failed: usize,
+    pub success: usize,
 }
 
-#[derive(Debug, Deserialize, Serialize, Default)]
+#[derive(
+    Debug, Deserialize, Serialize, Default, strum::Display, strum::EnumString, strum::EnumIter,
+)]
 pub enum JobState {
     #[default]
     Pending,
+    Scheduled,
     Running,
     Dead,
     Failed,
     Success,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct Filter {
+    #[serde(default)]
+    pub status: JobState,
+    #[serde(default = "default_page")]
+    pub page: i32,
+}
+
+fn default_page() -> i32 {
+    1
+}
+
 pub trait BackendExt<T>
 where
     Self: Sized,
 {
+    type Request;
     /// List all Workers that are working on a backend
     fn list_workers(&self) -> impl Future<Output = Result<Vec<Worker>, Error>> + Send;
 
@@ -65,12 +90,11 @@ where
         &self,
         status: &JobState,
         page: i32,
-    ) -> impl Future<Output = Result<Vec<Request<T>>, Error>> + Send;
+    ) -> impl Future<Output = Result<Vec<Self::Request>, Error>> + Send;
 }
 
 #[derive(Debug, Deserialize)]
 pub enum Config {
-    Full(FullConfig),
     Board(BoardConfig),
 }
 #[derive(Debug, Deserialize)]
@@ -93,11 +117,8 @@ pub enum Layer {
     Prometheus,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct FullConfig {
-    worker: String,
-    instances: usize,
-    layers: Vec<Layer>,
-    hurl: PathBuf,
-    task_type: String,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetJobsResult<T> {
+    pub stats: Stat,
+    pub jobs: Vec<T>,
 }

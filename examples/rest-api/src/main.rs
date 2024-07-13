@@ -1,13 +1,12 @@
-use actix::{clock::sleep, Addr};
-use actix_web::{get, rt::signal::ctrl_c, web, App, HttpServer};
-use apalis::layers::tracing::TraceLayer;
-use apalis::prelude::*;
+use actix::clock::sleep;
+use actix_web::{rt::signal::ctrl_c, web, App, HttpServer};
+use apalis::{layers::tracing::TraceLayer, prelude::*};
 use apalis_redis::RedisStorage;
 use backend::{api::ApiBuilder, sse::Broadcaster};
 use core::fmt;
 use futures::{
     future::{self, BoxFuture},
-    FutureExt, TryFutureExt,
+    FutureExt,
 };
 use serde::{Deserialize, Serialize};
 use std::{sync::Mutex, task::Context, task::Poll, time::Duration};
@@ -22,7 +21,7 @@ mod sse {
         let rx = broadcaster.lock().unwrap().new_client();
 
         HttpResponse::Ok()
-            .header("content-type", "text/event-stream")
+            .append_header(("content-type", "text/event-stream"))
             .no_chunking(0)
             .streaming(rx)
     }
@@ -35,11 +34,7 @@ pub struct Email {
     pub text: String,
 }
 
-impl Job for Email {
-    const NAME: &'static str = "apalis::Email";
-}
-
-pub async fn send_email(job: Email) {
+pub async fn send_email(_job: Email) {
     sleep(Duration::from_secs(10)).await;
     // log::info!("Attempting to send email to {}", job.to);
 }
@@ -49,26 +44,28 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "debug,sqlx::query=error");
     env_logger::init();
     let broadcaster = Broadcaster::create();
-    let redis = RedisStorage::new(apalis_redis::connect("redis://127.0.0.1/").await.unwrap());
+    let mut redis = RedisStorage::new(apalis_redis::connect("redis://127.0.0.1/").await.unwrap());
 
-    produce_redis_jobs(redis.clone()).await;
+    produce_redis_jobs(&mut redis).await;
     let worker = Monitor::<TokioExecutor>::new()
-        .register_with_count(
-            1,
+        .register(
             WorkerBuilder::new("tasty-apple")
                 .layer(TraceLayer::new())
                 .layer(SseLogLayer::new(broadcaster.clone()))
-                .with_storage(redis.clone())
+                .backend(redis.clone())
                 .build_fn(send_email),
         )
         .run_with_signal(async { ctrl_c().await });
-    let http = async {
+    let http = async move {
         HttpServer::new(move || {
             App::new()
                 .route("/events", web::get().to(sse::new_client))
                 .service(
-                    web::scope("/api")
-                        .service(ApiBuilder::new().add_storage(redis.clone()).build()),
+                    web::scope("/api").service(
+                        ApiBuilder::new()
+                            .add_storage(&redis, "apalis::redis")
+                            .build(),
+                    ),
                 )
                 .app_data(broadcaster.clone())
         })
@@ -83,7 +80,8 @@ async fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-async fn produce_redis_jobs(mut storage: RedisStorage<Email>) {
+async fn produce_redis_jobs(storage: &mut RedisStorage<Email>) {
+    use apalis::prelude::Storage;
     for i in 0..10 {
         storage
             .push(Email {

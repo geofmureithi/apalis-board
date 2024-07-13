@@ -1,21 +1,10 @@
 use std::{collections::HashSet, fmt::Display};
 
 use actix_web::{web, HttpResponse, Scope};
-use apalis_core::storage::{Job, Storage};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use shared::{BackendExt, JobState, Stat};
-
-#[derive(Deserialize, Debug)]
-struct Filter {
-    #[serde(default)]
-    status: JobState,
-    #[serde(default = "default_page")]
-    page: i32,
-}
-
-fn default_page() -> i32 {
-    1
-}
+use apalis_core::storage::Storage;
+use serde::{de::DeserializeOwned, Serialize};
+use shared::{BackendExt, Filter, GetJobsResult};
+use tokio::sync::RwLock;
 
 pub struct ApiBuilder {
     scope: Scope,
@@ -23,22 +12,22 @@ pub struct ApiBuilder {
 }
 
 impl ApiBuilder {
-    pub fn add_storage<J, S>(mut self, storage: S) -> Self
+    pub fn add_storage<J, S>(mut self, storage: &S, namespace: &str) -> Self
     where
-        J: Job + Serialize + DeserializeOwned + 'static,
+        J: Serialize + DeserializeOwned + 'static,
         S: BackendExt<J> + Clone,
         S: Storage<Job = J>,
         S: 'static + Send,
         S::Identifier: Display + DeserializeOwned,
         S::Error: Display,
+        S::Request: Serialize,
     {
-        let name = J::NAME.to_string();
-        self.list.insert(name);
+        self.list.insert(namespace.to_string());
 
         Self {
             scope: self.scope.service(
-                Scope::new(J::NAME)
-                    .app_data(web::Data::new(storage))
+                Scope::new(namespace)
+                    .app_data(web::Data::new(RwLock::new(storage.clone())))
                     .route("", web::get().to(get_jobs::<J, S>)) // Fetch jobs in queue
                     .route("/workers", web::get().to(get_workers::<J, S>)) // Fetch jobs in queue
                     .route("/job", web::put().to(push_job::<J, S>)) // Allow add jobs via api
@@ -66,62 +55,61 @@ impl ApiBuilder {
     }
 }
 
-async fn push_job<J, S>(job: web::Json<J>, storage: web::Data<S>) -> HttpResponse
+async fn push_job<J, S>(job: web::Json<J>, storage: web::Data<RwLock<S>>) -> HttpResponse
 where
-    J: Job + Serialize + DeserializeOwned + 'static,
+    J: Serialize + DeserializeOwned + 'static,
     S: Storage<Job = J> + Clone,
     S::Identifier: Display,
     S::Error: Display,
 {
-    let storage = &*storage.into_inner();
-    let mut storage = storage.clone();
-    let res = storage.push(job.into_inner()).await;
+    let res = storage.write().await.push(job.into_inner()).await;
     match res {
         Ok(id) => HttpResponse::Ok().body(format!("Job with ID [{id}] added to queue")),
         Err(e) => HttpResponse::InternalServerError().body(format!("{e}")),
     }
 }
 
-async fn get_jobs<J, S>(storage: web::Data<S>, filter: web::Query<Filter>) -> HttpResponse
+async fn get_jobs<J, S>(storage: web::Data<RwLock<S>>, filter: web::Query<Filter>) -> HttpResponse
 where
-    J: Job + Serialize + DeserializeOwned + 'static,
+    J: Serialize + DeserializeOwned + 'static,
     S: Storage<Job = J> + BackendExt<J> + Send,
+    S::Request: Serialize,
 {
     dbg!(&filter);
     // TODO: fix unwrap
-    let stats = storage.stats().await.unwrap_or_default();
+    let stats = storage.read().await.stats().await.unwrap_or_default();
     let jobs = storage
+        .read()
+        .await
         .list_jobs(&filter.status, filter.page)
         .await
         .unwrap();
-    #[derive(Debug, Serialize)]
-    struct GetJobsResult<T> {
-        stats: Stat,
-        jobs: Vec<T>,
-    }
 
     HttpResponse::Ok().json(GetJobsResult { stats, jobs })
 }
 
-async fn get_workers<J, S>(storage: web::Data<S>) -> HttpResponse
+async fn get_workers<J, S>(storage: web::Data<RwLock<S>>) -> HttpResponse
 where
-    J: Job + Serialize + DeserializeOwned + 'static,
-    S: Storage<Job = J> + BackendExt<J>,
+    J: Serialize + DeserializeOwned + 'static,
+    S: Storage<Job = J> + BackendExt<J> + Clone,
 {
-    let workers = storage.list_workers().await;
+    let workers = storage.read().await.list_workers().await;
     match workers {
         Ok(workers) => HttpResponse::Ok().json(workers),
         Err(e) => HttpResponse::InternalServerError().body(format!("{e}")),
     }
 }
 
-async fn get_job<J, S>(job_id: web::Path<S::Identifier>, storage: web::Data<S>) -> HttpResponse
+async fn get_job<J, S>(
+    job_id: web::Path<S::Identifier>,
+    storage: web::Data<RwLock<S>>,
+) -> HttpResponse
 where
-    J: Job + Serialize + DeserializeOwned + 'static,
+    J: Serialize + DeserializeOwned + 'static,
     S: Storage<Job = J> + 'static,
     S::Error: Display,
 {
-    let res = storage.fetch_by_id(&*job_id).await;
+    let res = storage.write().await.fetch_by_id(&*job_id).await;
     match res {
         Ok(Some(job)) => HttpResponse::Ok().json(job),
         Ok(None) => HttpResponse::NotFound().finish(),

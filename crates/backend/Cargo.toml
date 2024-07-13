@@ -11,6 +11,8 @@ actix-web-actors = "4.3.0"
 actix = "0.13.3"
 uuid = { version = "1.8", features = ["v4", "serde"] }
 shared = { package = "apalis-board-shared", path = "../shared" }
-apalis-core = { version = "0.5", git = "https://github.com/geofmureithi/apalis", branch = "fix/better-api" }
+apalis-core = { version = "0.6.0-rc.3", git = "https://github.com/geofmureithi/apalis", branch = "chore/v0.6.0" }
 serde = { version = "1", features = ["derive"] }
 futures = "0.3"
+tokio = "1"
+unescape = "0.1.0"

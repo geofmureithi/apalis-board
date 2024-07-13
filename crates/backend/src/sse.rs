@@ -37,14 +37,14 @@ impl Broadcaster {
     }
 
     fn spawn_ping(me: Data<Mutex<Self>>) {
-        let mut interval = time::interval(Duration::from_millis(10));
+        let mut interval = time::interval(Duration::from_millis(500));
         let task = async move {
             loop {
                 interval.tick().await;
-                me.lock().unwrap().remove_stale_clients();
+                let _ = me.lock().map(|mut res| res.remove_stale_clients());
             }
         };
-        actix::spawn(task);
+        tokio::spawn(task);
     }
 
     fn remove_stale_clients(&mut self) {
@@ -71,10 +71,10 @@ impl Broadcaster {
     }
 
     pub fn send(&self, msg: &str) {
-        dbg!(msg);
-        let msg = Bytes::from(["data: ", msg, "\n\n"].concat());
+        let msg = unescape::unescape(msg).unwrap();
+        let msg = Bytes::from(["data: ", &msg, "\n\n"].concat());
 
-        for client in self.clients.iter() {
+        for client in self.clients.iter().filter(|client| !client.is_closed()) {
             client.clone().try_send(msg.clone()).unwrap();
         }
     }
@@ -85,7 +85,6 @@ pub struct Client(Receiver<Bytes>);
 
 impl Stream for Client {
     type Item = Result<Bytes, actix_web::Error>;
-
 
     fn poll_next(mut self: Pin<&mut Client>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         self.0.poll_next_unpin(cx).map(|c| Ok(c).transpose())

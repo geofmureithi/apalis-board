@@ -1,0 +1,26 @@
+jobs:
+  send-email:
+    description: Sending emails with nodejs
+    task:
+      docker: "alpine:3"
+      steps:
+        echo: 'echo "HelloWorld"'
+    source:
+      Http:
+        backend: default
+  send-again:
+    description: Sending again
+    docker: "alpine:3"
+      steps:
+        echo: 'echo "HelloWorld"'
+    source:
+      Http:
+        backend: default
+  daily-reminder:
+    description: Daily reminder
+    task:
+      docker: "alpine:3"
+      steps:
+        echo: 'echo "repository variable : $REPOSITORY_VAR"'
+    source:
+      Cron: 1/20 * * * * *
