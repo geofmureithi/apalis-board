@@ -3,7 +3,6 @@ use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use apalis::layers::catch_panic::CatchPanicLayer;
 use apalis::layers::tracing::TraceLayer;
 use apalis::prelude::{Data, Monitor, WorkerBuilder, WorkerFactoryFn};
-use apalis::utils::TokioExecutor;
 use apalis_cron::CronStream;
 use apalis_redis::RedisStorage;
 use apalis_sql::mysql::{MySqlPool, MysqlStorage};
@@ -82,7 +81,7 @@ impl From<DateTime<Utc>> for LaunchJob {
     }
 }
 
-async fn spawn_command(cmd: &String) -> anyhow::Result<()> {
+async fn spawn_command(cmd: &str) -> anyhow::Result<()> {
     let mut words = shlex::split(cmd).ok_or(anyhow::anyhow!("parsing error"))?;
     let cmd = words.remove(0);
     let mut cmd = async_process::Command::new(cmd);
@@ -105,7 +104,7 @@ async fn run_task(command: &Launch) -> anyhow::Result<()> {
                 run_docker(image, steps).await?;
             }
             None => {
-                for (_name, cmd) in steps {
+                for cmd in steps.values() {
                     spawn_command(cmd).await?;
                 }
             }
@@ -177,7 +176,7 @@ async fn main() -> std::io::Result<()> {
         .extract()
         .unwrap();
 
-    let mut monitor = Monitor::<TokioExecutor>::new();
+    let mut monitor = Monitor::new();
     let mut exposed: Vec<(String, StorageType)> = vec![];
 
     for (job, command) in config.jobs.iter() {
@@ -193,13 +192,12 @@ async fn main() -> std::io::Result<()> {
                     let storage: SqliteStorage<LaunchJob> =
                         SqliteStorage::new_with_config(pool, cfg);
                     exposed.push((job.clone(), StorageType::Sqlite(storage.clone())));
-                    monitor = monitor.register_with_count(
-                        1,
-                        WorkerBuilder::new(&job)
+                    monitor = monitor.register(
+                        WorkerBuilder::new(job)
                             .layer(CatchPanicLayer::new())
                             .data(command.clone())
                             .data(config.clone())
-                            .layer(TraceLayer::new().make_span_with(TaskSpan::new(&job)))
+                            .layer(TraceLayer::new().make_span_with(TaskSpan::new(job)))
                             .backend(storage)
                             .build_fn(launch_job),
                     );
@@ -211,13 +209,12 @@ async fn main() -> std::io::Result<()> {
                     let redis: RedisStorage<LaunchJob> =
                         RedisStorage::new_with_config(conn.clone(), cfg);
                     exposed.push((job.clone(), StorageType::Redis(redis.clone())));
-                    monitor = monitor.register_with_count(
-                        1,
-                        WorkerBuilder::new(&job)
+                    monitor = monitor.register(
+                        WorkerBuilder::new(job)
                             .layer(CatchPanicLayer::new())
                             .data(command.clone())
                             .data(config.clone())
-                            .layer(TraceLayer::new().make_span_with(TaskSpan::new(&job)))
+                            .layer(TraceLayer::new().make_span_with(TaskSpan::new(job)))
                             .backend(redis)
                             .build_fn(launch_job),
                     );
@@ -231,13 +228,12 @@ async fn main() -> std::io::Result<()> {
                         .expect("unable to run migrations for mysql");
                     let storage: MysqlStorage<LaunchJob> = MysqlStorage::new_with_config(pool, cfg);
                     exposed.push((job.clone(), StorageType::Mysql(storage.clone())));
-                    monitor = monitor.register_with_count(
-                        1,
-                        WorkerBuilder::new(&job)
+                    monitor = monitor.register(
+                        WorkerBuilder::new(job)
                             .layer(CatchPanicLayer::new())
                             .data(command.clone())
                             .data(config.clone())
-                            .layer(TraceLayer::new().make_span_with(TaskSpan::new(&job)))
+                            .layer(TraceLayer::new().make_span_with(TaskSpan::new(job)))
                             .backend(storage)
                             .build_fn(launch_job),
                     );
@@ -252,13 +248,12 @@ async fn main() -> std::io::Result<()> {
                     let storage: PostgresStorage<LaunchJob> =
                         PostgresStorage::new_with_config(pool, cfg);
                     exposed.push((job.clone(), StorageType::Postgres(storage.clone())));
-                    monitor = monitor.register_with_count(
-                        1,
-                        WorkerBuilder::new(&job)
+                    monitor = monitor.register(
+                        WorkerBuilder::new(job)
                             .layer(CatchPanicLayer::new())
                             .data(command.clone())
                             .data(config.clone())
-                            .layer(TraceLayer::new().make_span_with(TaskSpan::new(&job)))
+                            .layer(TraceLayer::new().make_span_with(TaskSpan::new(job)))
                             .backend(storage)
                             .build_fn(launch_job),
                     );
@@ -273,13 +268,12 @@ async fn main() -> std::io::Result<()> {
                     let storage: SqliteStorage<LaunchJob> =
                         SqliteStorage::new_with_config(pool, cfg);
                     exposed.push((job.clone(), StorageType::Sqlite(storage.clone())));
-                    monitor = monitor.register_with_count(
-                        1,
-                        WorkerBuilder::new(&job)
+                    monitor = monitor.register(
+                        WorkerBuilder::new(job)
                             .layer(CatchPanicLayer::new())
                             .data(command.clone())
                             .data(config.clone())
-                            .layer(TraceLayer::new().make_span_with(TaskSpan::new(&job)))
+                            .layer(TraceLayer::new().make_span_with(TaskSpan::new(job)))
                             .backend(storage)
                             .build_fn(launch_job),
                     );
@@ -287,14 +281,14 @@ async fn main() -> std::io::Result<()> {
                 _ => unimplemented!(),
             },
             Source::Cron(cron) => {
-                let schedule = apalis_cron::Schedule::from_str(&cron).unwrap();
+                let schedule = apalis_cron::Schedule::from_str(cron).unwrap();
                 let stream = CronStream::new(schedule);
                 monitor = monitor.register(
                     WorkerBuilder::new("cron")
                         .layer(CatchPanicLayer::new())
                         .data(command.clone())
                         .data(config.clone())
-                        .layer(TraceLayer::new().make_span_with(TaskSpan::new(&job)))
+                        .layer(TraceLayer::new().make_span_with(TaskSpan::new(job)))
                         .backend(stream)
                         .build_fn(launch_job),
                 );

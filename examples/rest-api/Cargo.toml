@@ -6,11 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-apalis = { version = "0.6.0-rc.3", git = "https://github.com/geofmureithi/apalis", branch = "chore/v0.6.0", features = [
+apalis = { version = "0.6.0-rc.8", git = "https://github.com/geofmureithi/apalis", branch = "chore/v0.6.0", features = [
     "limit",
 ] }
-apalis-redis = { version = "0.6.0-rc.3", git = "https://github.com/geofmureithi/apalis", branch = "chore/v0.6.0" }
-apalis-sql = { version = "0.6.0-rc.3", git = "https://github.com/geofmureithi/apalis", branch = "chore/v0.6.0", features = [
+apalis-redis = { version = "0.6.0-rc.8", git = "https://github.com/geofmureithi/apalis", branch = "chore/v0.6.0" }
+apalis-sql = { version = "0.6.0-rc.8", git = "https://github.com/geofmureithi/apalis", branch = "chore/v0.6.0", features = [
     "sqlite",
 ] }
 actix-web = "4.5.1"

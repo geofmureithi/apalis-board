@@ -1,7 +1,7 @@
 use std::{collections::HashSet, fmt::Display};
 
 use actix_web::{web, HttpResponse, Scope};
-use apalis_core::storage::Storage;
+use apalis_core::{storage::Storage, task::task_id::TaskId};
 use serde::{de::DeserializeOwned, Serialize};
 use shared::{BackendExt, Filter, GetJobsResult};
 use tokio::sync::RwLock;
@@ -18,9 +18,9 @@ impl ApiBuilder {
         S: BackendExt<J> + Clone,
         S: Storage<Job = J>,
         S: 'static + Send,
-        S::Identifier: Display + DeserializeOwned,
-        S::Error: Display,
+        S::Context: Serialize,
         S::Request: Serialize,
+        <S as Storage>::Error: Display,
     {
         self.list.insert(namespace.to_string());
 
@@ -55,16 +55,23 @@ impl ApiBuilder {
     }
 }
 
+impl Default for ApiBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 async fn push_job<J, S>(job: web::Json<J>, storage: web::Data<RwLock<S>>) -> HttpResponse
 where
     J: Serialize + DeserializeOwned + 'static,
     S: Storage<Job = J> + Clone,
-    S::Identifier: Display,
     S::Error: Display,
 {
     let res = storage.write().await.push(job.into_inner()).await;
     match res {
-        Ok(id) => HttpResponse::Ok().body(format!("Job with ID [{id}] added to queue")),
+        Ok(parts) => {
+            HttpResponse::Ok().body(format!("Job with ID [{}] added to queue", parts.task_id))
+        }
         Err(e) => HttpResponse::InternalServerError().body(format!("{e}")),
     }
 }
@@ -78,14 +85,15 @@ where
     dbg!(&filter);
     // TODO: fix unwrap
     let stats = storage.read().await.stats().await.unwrap_or_default();
-    let jobs = storage
+    let res = storage
         .read()
         .await
         .list_jobs(&filter.status, filter.page)
-        .await
-        .unwrap();
-
-    HttpResponse::Ok().json(GetJobsResult { stats, jobs })
+        .await;
+    match res {
+        Ok(jobs) => HttpResponse::Ok().json(GetJobsResult { stats, jobs }),
+        Err(_) => HttpResponse::InternalServerError().json("get_jobs_failed"), //TODO
+    }
 }
 
 async fn get_workers<J, S>(storage: web::Data<RwLock<S>>) -> HttpResponse
@@ -96,20 +104,18 @@ where
     let workers = storage.read().await.list_workers().await;
     match workers {
         Ok(workers) => HttpResponse::Ok().json(workers),
-        Err(e) => HttpResponse::InternalServerError().body(format!("{e}")),
+        Err(_) => HttpResponse::InternalServerError().body("get_workers_failed"), //TODO
     }
 }
 
-async fn get_job<J, S>(
-    job_id: web::Path<S::Identifier>,
-    storage: web::Data<RwLock<S>>,
-) -> HttpResponse
+async fn get_job<J, S>(job_id: web::Path<TaskId>, storage: web::Data<RwLock<S>>) -> HttpResponse
 where
     J: Serialize + DeserializeOwned + 'static,
     S: Storage<Job = J> + 'static,
     S::Error: Display,
+    S::Context: Serialize,
 {
-    let res = storage.write().await.fetch_by_id(&*job_id).await;
+    let res = storage.write().await.fetch_by_id(&job_id).await;
     match res {
         Ok(Some(job)) => HttpResponse::Ok().json(job),
         Ok(None) => HttpResponse::NotFound().finish(),

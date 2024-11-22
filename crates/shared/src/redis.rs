@@ -1,17 +1,22 @@
 use crate::{BackendExt, JobState, Stat, Worker};
-use apalis_core::{error::Error, worker::WorkerId};
-use apalis_redis::RedisCodec;
-use apalis_redis::RedisJob;
+use apalis_core::codec::json::JsonCodec;
+use apalis_core::request::Request;
+use apalis_core::worker::WorkerId;
+use apalis_core::Codec;
+use apalis_redis::RedisContext;
 use apalis_redis::RedisStorage;
 use redis::{ErrorKind, Value};
 use serde::{de::DeserializeOwned, Serialize};
+
+type RedisCodec = JsonCodec<Vec<u8>>;
 
 impl<T> BackendExt<T> for RedisStorage<T>
 where
     T: 'static + Serialize + DeserializeOwned + Send + Unpin + Sync,
 {
-    type Request = RedisJob<T>;
-    async fn stats(&self) -> Result<Stat, Error> {
+    type Request = Request<T, RedisContext>;
+    type Error = redis::RedisError;
+    async fn stats(&self) -> Result<Stat, redis::RedisError> {
         let mut conn = self.get_connection().clone();
         let queue = self.get_config();
         let script = r#"
@@ -43,8 +48,7 @@ where
             .arg(keys.len().to_string())
             .arg(keys)
             .query_async(&mut conn)
-            .await
-            .map_err(|e| Error::Failed(Box::new(e)))?;
+            .await?;
 
         Ok(Stat {
             pending: results[0],
@@ -54,7 +58,11 @@ where
             success: results[4],
         })
     }
-    async fn list_jobs(&self, status: &JobState, page: i32) -> Result<Vec<Self::Request>, Error> {
+    async fn list_jobs(
+        &self,
+        status: &JobState,
+        page: i32,
+    ) -> Result<Vec<Self::Request>, redis::RedisError> {
         let mut conn = self.get_connection().clone();
         let queue = self.get_config();
         match status {
@@ -66,8 +74,7 @@ where
                     .arg(((page - 1) * 10).to_string())
                     .arg((page * 10).to_string())
                     .query_async(&mut conn)
-                    .await
-                    .map_err(|e| Error::Failed(Box::new(e)))?;
+                    .await?;
 
                 if ids.is_empty() {
                     return Ok(Vec::new());
@@ -76,11 +83,10 @@ where
                     .arg(job_data_hash)
                     .arg(&ids)
                     .query_async(&mut conn)
-                    .await
-                    .map_err(|e| Error::Failed(Box::new(e)))?;
+                    .await?;
 
-                let jobs: Vec<RedisJob<T>> =
-                    deserialize_multiple_jobs(data.as_ref(), self.get_codec()).unwrap();
+                let jobs: Vec<Request<T, RedisContext>> =
+                    deserialize_multiple_jobs::<_, RedisCodec>(data.as_ref()).unwrap();
                 Ok(jobs)
             }
             JobState::Running => {
@@ -91,8 +97,7 @@ where
                     .arg("0")
                     .arg("-1")
                     .query_async(&mut conn)
-                    .await
-                    .map_err(|e| Error::Failed(Box::new(e)))?;
+                    .await?;
 
                 if workers.is_empty() {
                     return Ok(Vec::new());
@@ -102,8 +107,7 @@ where
                     let ids: Vec<String> = redis::cmd("SMEMBERS")
                         .arg(&worker)
                         .query_async(&mut conn)
-                        .await
-                        .map_err(|e| Error::Failed(Box::new(e)))?;
+                        .await?;
 
                     if ids.is_empty() {
                         continue;
@@ -112,11 +116,10 @@ where
                         .arg(job_data_hash.clone())
                         .arg(&ids)
                         .query_async(&mut conn)
-                        .await
-                        .map_err(|e| Error::Failed(Box::new(e)))?;
+                        .await?;
 
-                    let jobs: Vec<RedisJob<T>> =
-                        deserialize_multiple_jobs(data.as_ref(), self.get_codec()).unwrap();
+                    let jobs: Vec<Request<T, RedisContext>> =
+                        deserialize_multiple_jobs::<_, RedisCodec>(data.as_ref()).unwrap();
                     all_jobs.extend(jobs);
                 }
 
@@ -130,8 +133,7 @@ where
                     .arg(((page - 1) * 10).to_string())
                     .arg((page * 10).to_string())
                     .query_async(&mut conn)
-                    .await
-                    .map_err(|e| Error::Failed(Box::new(e)))?;
+                    .await?;
 
                 if ids.is_empty() {
                     return Ok(Vec::new());
@@ -140,11 +142,10 @@ where
                     .arg(job_data_hash)
                     .arg(&ids)
                     .query_async(&mut conn)
-                    .await
-                    .map_err(|e| Error::Failed(Box::new(e)))?;
+                    .await?;
 
-                let jobs: Vec<RedisJob<T>> =
-                    deserialize_multiple_jobs(data.as_ref(), self.get_codec()).unwrap();
+                let jobs: Vec<Request<T, RedisContext>> =
+                    deserialize_multiple_jobs::<_, RedisCodec>(data.as_ref()).unwrap();
                 Ok(jobs)
             }
             // JobState::Retry => Ok(Vec::new()),
@@ -156,8 +157,7 @@ where
                     .arg(((page - 1) * 10).to_string())
                     .arg((page * 10).to_string())
                     .query_async(&mut conn)
-                    .await
-                    .map_err(|e| Error::Failed(Box::new(e)))?;
+                    .await?;
                 if ids.is_empty() {
                     return Ok(Vec::new());
                 }
@@ -165,10 +165,10 @@ where
                     .arg(job_data_hash)
                     .arg(&ids)
                     .query_async(&mut conn)
-                    .await
-                    .map_err(|e| Error::Failed(Box::new(e)))?;
-                let jobs: Vec<RedisJob<T>> =
-                    deserialize_multiple_jobs(data.as_ref(), self.get_codec()).unwrap();
+                    .await?;
+                let jobs: Vec<Request<T, RedisContext>> =
+                    deserialize_multiple_jobs::<_, RedisCodec>(data.as_ref()).unwrap();
+
                 Ok(jobs)
             }
             JobState::Dead => {
@@ -179,8 +179,7 @@ where
                     .arg(((page - 1) * 10).to_string())
                     .arg((page * 10).to_string())
                     .query_async(&mut conn)
-                    .await
-                    .map_err(|e| Error::Failed(Box::new(e)))?;
+                    .await?;
 
                 if ids.is_empty() {
                     return Ok(Vec::new());
@@ -189,16 +188,16 @@ where
                     .arg(job_data_hash)
                     .arg(&ids)
                     .query_async(&mut conn)
-                    .await
-                    .map_err(|e| Error::Failed(Box::new(e)))?;
+                    .await?;
 
-                let jobs: Vec<RedisJob<T>> =
-                    deserialize_multiple_jobs(data.as_ref(), self.get_codec()).unwrap();
+                let jobs: Vec<Request<T, RedisContext>> =
+                    deserialize_multiple_jobs::<_, RedisCodec>(data.as_ref()).unwrap();
+
                 Ok(jobs)
             }
         }
     }
-    async fn list_workers(&self) -> Result<Vec<Worker>, Error> {
+    async fn list_workers(&self) -> Result<Vec<Worker>, redis::RedisError> {
         let queue = self.get_config();
         let consumers_set = &queue.consumers_set();
         let mut conn = self.get_connection().clone();
@@ -207,8 +206,7 @@ where
             .arg("0")
             .arg("-1")
             .query_async(&mut conn)
-            .await
-            .map_err(|e| Error::Failed(Box::new(e)))?;
+            .await?;
         Ok(workers
             .into_iter()
             .map(|w| {
@@ -221,16 +219,15 @@ where
     }
 }
 
-fn deserialize_multiple_jobs<T>(
+fn deserialize_multiple_jobs<T, C: Codec<Compact = Vec<u8>>>(
     jobs: Option<&Value>,
-    codec: &RedisCodec<T>,
-) -> Option<Vec<RedisJob<T>>>
+) -> Option<Vec<Request<T, RedisContext>>>
 where
     T: DeserializeOwned,
 {
     let jobs = match jobs {
         None => None,
-        Some(Value::Bulk(val)) => Some(val),
+        Some(Value::Array(val)) => Some(val),
         _ => {
             // error!(
             //     "Decoding Message Failed: {:?}",
@@ -244,10 +241,9 @@ where
         values
             .iter()
             .filter_map(|v| match v {
-                Value::Data(data) => {
-                    let inner = codec
-                        .decode(data)
-                        .map_err(|e| (ErrorKind::IoError, "Decode error", e.to_string()))
+                Value::BulkString(data) => {
+                    let inner = C::decode(data.to_vec())
+                        .map_err(|e| (ErrorKind::IoError, "Decode error", e.into().to_string()))
                         .unwrap();
                     Some(inner)
                 }

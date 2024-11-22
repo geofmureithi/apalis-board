@@ -42,7 +42,7 @@ pub async fn run_docker(image: &str, commands: &HashMap<String, String>) -> anyh
         .id;
     docker.start_container::<String>(&id, None).await?;
 
-    for (_name, command) in commands {
+    for command in commands.values() {
         // non interactive
         let exec = docker
             .create_exec(
@@ -50,7 +50,7 @@ pub async fn run_docker(image: &str, commands: &HashMap<String, String>) -> anyh
                 CreateExecOptions {
                     attach_stdout: Some(true),
                     attach_stderr: Some(true),
-                    cmd: Some(shlex::split(&command).unwrap()),
+                    cmd: Some(shlex::split(command).unwrap()),
                     ..Default::default()
                 },
             )

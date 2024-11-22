@@ -21,8 +21,8 @@ impl TaskSpan {
     }
 }
 
-impl<B> MakeSpan<B> for TaskSpan {
-    fn make_span(&mut self, req: &Request<B>) -> Span {
+impl<B, Ctx> MakeSpan<B, Ctx> for TaskSpan {
+    fn make_span(&mut self, req: &Request<B, Ctx>) -> Span {
         let task_id: &TaskId = req.get().unwrap();
         let attempts: Attempt = req.get().cloned().unwrap_or_default();
         let span = Span::current();

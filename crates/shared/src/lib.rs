@@ -1,4 +1,4 @@
-use std::{any::type_name, future::Future, time::Duration};
+use std::{any::type_name, future::Future, num::TryFromIntError, time::Duration};
 
 #[cfg(feature = "redis")]
 pub mod redis;
@@ -12,7 +12,7 @@ pub mod postgres;
 #[cfg(feature = "mysql")]
 pub mod mysql;
 
-use apalis_core::{error::Error, worker::WorkerId};
+use apalis_core::worker::WorkerId;
 use serde::{Deserialize, Serialize};
 
 /// A serializable version of a worker.
@@ -79,18 +79,19 @@ where
     Self: Sized,
 {
     type Request;
+    type Error;
     /// List all Workers that are working on a backend
-    fn list_workers(&self) -> impl Future<Output = Result<Vec<Worker>, Error>> + Send;
+    fn list_workers(&self) -> impl Future<Output = Result<Vec<Worker>, Self::Error>> + Send;
 
     /// Returns the counts of jobs in different states
-    fn stats(&self) -> impl Future<Output = Result<Stat, Error>> + Send;
+    fn stats(&self) -> impl Future<Output = Result<Stat, Self::Error>> + Send;
 
     /// Fetch jobs persisted in a backend
     fn list_jobs(
         &self,
         status: &JobState,
         page: i32,
-    ) -> impl Future<Output = Result<Vec<Self::Request>, Error>> + Send;
+    ) -> impl Future<Output = Result<Vec<Self::Request>, Self::Error>> + Send;
 }
 
 #[derive(Debug, Deserialize)]
@@ -121,4 +122,12 @@ pub enum Layer {
 pub struct GetJobsResult<T> {
     pub stats: Stat,
     pub jobs: Vec<T>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum SqlError {
+    #[error("sqlx::Error: {0}")]
+    Sqlx(#[from] sqlx::Error),
+    #[error("TryFromIntError: {0}")]
+    TryFromInt(#[from] TryFromIntError),
 }

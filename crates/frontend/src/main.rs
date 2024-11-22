@@ -21,7 +21,7 @@ pub struct State {
 
 impl State {
     async fn list_namespaces() -> Result<Vec<String>, gloo_net::Error> {
-        let res = Request::get(&format!("{API_PATH}")).send().await?;
+        let res = Request::get(API_PATH).send().await?;
         res.json().await
     }
 

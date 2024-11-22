@@ -22,7 +22,6 @@ mod sse {
 
         HttpResponse::Ok()
             .append_header(("content-type", "text/event-stream"))
-            .no_chunking(0)
             .streaming(rx)
     }
 }
@@ -47,7 +46,7 @@ async fn main() -> std::io::Result<()> {
     let mut redis = RedisStorage::new(apalis_redis::connect("redis://127.0.0.1/").await.unwrap());
 
     produce_redis_jobs(&mut redis).await;
-    let worker = Monitor::<TokioExecutor>::new()
+    let worker = Monitor::new()
         .register(
             WorkerBuilder::new("tasty-apple")
                 .layer(TraceLayer::new())

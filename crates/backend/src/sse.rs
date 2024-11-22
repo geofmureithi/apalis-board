@@ -19,6 +19,12 @@ pub struct Broadcaster {
     clients: Vec<Sender<Bytes>>,
 }
 
+impl Default for Broadcaster {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Broadcaster {
     pub fn create() -> Data<Mutex<Self>> {
         // Data ≃ Arc
